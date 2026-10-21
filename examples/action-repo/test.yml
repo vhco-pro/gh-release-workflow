@@ -1,0 +1,21 @@
+name: Test
+
+# The checks that must pass before release.yml tags. Called by release.yml and
+# by nothing else, so the tests are defined once. Replace the steps with the
+# repository's own checks.
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run the repository's tests
+        run: make test
