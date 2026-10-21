@@ -1,0 +1,64 @@
+name: GitHub release
+
+# For repositories whose Git tag is the release, such as actions and reusable
+# workflows. Call it after the caller's tests through `needs:`: once the tag
+# exists, consumers can use it.
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: Linux runner label
+        type: string
+        default: ubuntu-latest
+      dry-run:
+        description: Calculate the version and render the notes without creating a tag or release
+        type: boolean
+        default: false
+    outputs:
+      version:
+        description: GitVersion SemVer, whether or not it was tagged
+        value: ${{ jobs.release.outputs.version }}
+      tag:
+        description: Exact tag pushed by this run, empty when none was
+        value: ${{ jobs.release.outputs.tag }}
+      tagged:
+        description: Whether this run pushed a tag
+        value: ${{ jobs.release.outputs.tagged }}
+      release-url:
+        description: URL of the release, empty on a dry run
+        value: ${{ jobs.release.outputs.release-url }}
+
+permissions: {}
+
+jobs:
+  release:
+    runs-on: ${{ inputs.runs-on }}
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.semVer }}
+      tag: ${{ steps.version.outputs.pushed-tag }}
+      tagged: ${{ steps.version.outputs.tagged }}
+      release-url: ${{ steps.publish.outputs.release-url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Calculate the version and push its exact tag
+        id: version
+        uses: michielvha/gitversion-tag-action@8cf5869816cf71437052ac97d086e00526bf2d89 # v7.0.4
+        with:
+          prefix: v
+          dry-run: ${{ inputs.dry-run }}
+      # The computed version, not pushed-tag: when an earlier run pushed the
+      # tag but failed to publish, this run finishes the release. An existing
+      # release is never changed.
+      - name: Publish the release
+        id: publish
+        uses: vhco-pro/gh-release-action@679cbfb20dddb23351acc7b5f571ce82808c973f # unreleased draft
+        with:
+          tag: v${{ steps.version.outputs.semVer }}
+          dry-run: ${{ inputs.dry-run }}

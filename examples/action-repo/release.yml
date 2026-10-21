@@ -1,0 +1,37 @@
+name: Release
+
+# Copy into .github/workflows of a repository whose Git tag is the release, such
+# as a GitHub Action. Replace the test job with the repository's own checks and
+# FULL_COMMIT_SHA with a released commit of vhco-pro/gh-release-workflow.
+# Tests run first: once the tag exists, consumers can use it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Render notes without creating a tag or release
+        type: boolean
+        default: true
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/test.yml
+
+  release:
+    needs: test
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    permissions:
+      contents: write
+    uses: vhco-pro/gh-release-workflow/.github/workflows/gh-release.yml@FULL_COMMIT_SHA
+    with:
+      dry-run: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.dry-run) }}

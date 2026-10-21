@@ -1,0 +1,30 @@
+name: Release
+
+# This repository releases itself with its own workflow by local path. The dry
+# run must pass at the commit being released before the real run tags it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/gh-release.yml
+    with:
+      dry-run: true
+
+  release:
+    needs: check
+    if: ${{ github.event_name == 'push' }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/gh-release.yml
