@@ -1,7 +1,8 @@
 version: 2
 updates:
+  # Example folders are scanned too, so the pins callers copy stay current.
   - package-ecosystem: github-actions
-    directory: /
+    directories: ["/", "/examples/*"]
     schedule:
       interval: weekly
     groups:
