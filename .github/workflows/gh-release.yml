@@ -58,7 +58,7 @@ jobs:
       # release is never changed.
       - name: Publish the release
         id: publish
-        uses: vhco-pro/gh-release-action@bee78e7afd80970471f4197e9a82ed5f2ddbaceb # v0.1.0
+        uses: vhco-pro/gh-release-action@5bb1cd41296b2bb15ec62c57a674460cef547d1a # v0.1.1
         with:
           tag: v${{ steps.version.outputs.semVer }}
           dry-run: ${{ inputs.dry-run }}
